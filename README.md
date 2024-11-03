@@ -3,10 +3,7 @@
 ```shell
 sudo apt update
 sudo apt upgrade
-sudo apt install libpcsclite-dev
-sudo apt install pcscd
-sudo apt install openjdk-11-jdk
-sudo apt install ant
+sudo apt install make libpcsclite-dev pcscd openjdk-11-jdk ant
 
 pip install swig
 pip install pyscard

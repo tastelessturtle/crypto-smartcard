@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CryptoApplet" default="crypto-sc" basedir=".">
+    <taskdef name="javacard" classname="pro.javacard.ant.JavaCard" classpath="tools/ant-javacard.jar"/>
+    <target name="crypto-sc">
+        <javacard jckit="libs/jc305u4_kit">
+            <cap targetsdk="libs/jc222_kit" aid="5714e4720af2152c" output="CryptoApplet.cap" sources="src" version="0.1">
+                <applet class="xyz.tastelessturtle.javacard.cryptoapplet.CryptoApplet" aid="5714e4720af2152cb449b1d8"/>
+            </cap>
+        </javacard>
+    </target>
+</project>
