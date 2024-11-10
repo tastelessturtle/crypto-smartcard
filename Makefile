@@ -1,4 +1,4 @@
-CryptoApplet.cap: build.xml src/CryptoApplet.java
+CryptoApplet.cap: build.xml src/CryptoApplet.java src/ECDSA.java
 	-java -jar tools/gp.jar --uninstall CryptoApplet.cap
 	rm -f CryptoApplet
 	ant
