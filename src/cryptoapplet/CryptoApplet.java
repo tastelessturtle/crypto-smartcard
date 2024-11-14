@@ -1,4 +1,4 @@
-package xyz.tastelessturtle.javacard.cryptoapplet;
+package cryptoapplet;
 
 import javacard.framework.APDU;
 import javacard.framework.Applet;

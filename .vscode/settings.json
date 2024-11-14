@@ -1,0 +1,19 @@
+{
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.referencedLibraries": [
+    "libs/jc305u4_kit/lib/ant-contrib-1.0b3.jar",
+    "libs/jc305u4_kit/lib/api_classic.jar",
+    "libs/jc305u4_kit/lib/api_classic_annotations.jar",
+    "libs/jc305u4_kit/lib/api_connected.jar",
+    "libs/jc305u4_kit/lib/asm-all-3.1.jar",
+    "libs/jc305u4_kit/lib/commons-cli-1.0.jar",
+    "libs/jc305u4_kit/lib/commons-codec-1.3.jar",
+    "libs/jc305u4_kit/lib/commons-httpclient-3.0.jar",
+    "libs/jc305u4_kit/lib/commons-logging-1.1.jar",
+    "libs/jc305u4_kit/lib/jc-debug-proxy.jar",
+    "libs/jc305u4_kit/lib/jctasks.jar",
+    "libs/jc305u4_kit/lib/tools.jar"
+  ]
+}

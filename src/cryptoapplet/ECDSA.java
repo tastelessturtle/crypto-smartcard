@@ -1,4 +1,4 @@
-package xyz.tastelessturtle.javacard.cryptoapplet;
+package cryptoapplet;
 
 import javacard.framework.APDU;
 import javacard.framework.ISO7816;
@@ -174,5 +174,16 @@ class ECDSA {
         // return response
         apdu.setOutgoingLength(le);
         apdu.sendBytes((short) 0, le);
+    }
+
+    public void genKey(APDU apdu) {
+        // gen new keypair
+        keyPair.genKeyPair();
+        privateKey = (ECPrivateKey) keyPair.getPrivate();
+        publicKey = (ECPublicKey) keyPair.getPublic();
+
+        // return with okay
+        apdu.setOutgoingLength((short) 0);
+        apdu.sendBytes((short) 0, (short) (0));
     }
 }
