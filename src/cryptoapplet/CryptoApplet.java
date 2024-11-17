@@ -1,5 +1,6 @@
 package cryptoapplet;
 
+// javacard framework
 import javacard.framework.APDU;
 import javacard.framework.Applet;
 import javacard.framework.ISO7816;
@@ -10,10 +11,14 @@ class CryptoApplet extends Applet {
     // ECDSA object
     private ECDSA ecdsa = null;
 
+    // Hello world string
     private final static byte[] hello = {
             0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21
     };
 
+    /**
+     * Constructor of the applet which initializes the crypto objects.
+     */
     protected CryptoApplet() {
         // build ECDSA object
         ecdsa = new ECDSA();
@@ -22,10 +27,23 @@ class CryptoApplet extends Applet {
         register();
     }
 
+    /**
+     * Installs the applet on the smartcard.
+     * 
+     * @param bArray  the array containing installation parameters
+     * @param bOffset the starting offset in bArray
+     * @param bLength the length in bytes of the parameter data in bArray The
+     *                maximum value of bLength is 127.
+     */
     public static void install(byte[] bArray, short bOffset, byte bLength) {
         new CryptoApplet();
     }
 
+    /**
+     * Function to process the incoming APDU messages.
+     * 
+     * @param apdu the incoming APDU object
+     */
     public void process(APDU apdu) {
         // return 9000 when app is selected
         if (selectingApplet())
@@ -49,6 +67,16 @@ class CryptoApplet extends Applet {
             // sign a 256bit hash
             case (byte) 0xEA:
                 ecdsa.signHash(apdu);
+                break;
+
+            // verify a signature
+            case (byte) 0xEB:
+                ecdsa.verifySignature(apdu);
+                break;
+
+            // generate a new keypair
+            case (byte) 0xED:
+                ecdsa.genKey(apdu);
                 break;
 
             // other instructions are not supported

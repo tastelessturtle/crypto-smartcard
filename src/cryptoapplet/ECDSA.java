@@ -1,9 +1,12 @@
 package cryptoapplet;
 
+// javacard framework packages
 import javacard.framework.APDU;
 import javacard.framework.ISO7816;
 import javacard.framework.ISOException;
 
+// javacard security packages
+import javacard.security.CryptoException;
 import javacard.security.ECPrivateKey;
 import javacard.security.ECPublicKey;
 import javacard.security.KeyBuilder;
@@ -84,6 +87,9 @@ class ECDSA {
     private ECPrivateKey privateKey = null;
     private ECPublicKey publicKey = null;
 
+    /**
+     * Constructor which configures the keypair and initializes the signatures.
+     */
     public ECDSA() {
         // build private key
         privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, KeyBuilder.LENGTH_EC_FP_256,
@@ -116,7 +122,13 @@ class ECDSA {
         verify.init(publicKey, Signature.MODE_VERIFY);
     }
 
-    public void getConfig(APDU apdu) {
+    /**
+     * Responds with the configuration of the ECDSA keys and parameters.
+     * 
+     * @param apdu the incoming APDU object
+     * @throws ISOException when an incorrect parameter is given
+     */
+    public void getConfig(APDU apdu) throws ISOException {
         // get buffer
         byte[] buffer = apdu.getBuffer();
         short le = apdu.setOutgoing();
@@ -160,7 +172,13 @@ class ECDSA {
         }
     }
 
-    public void signHash(APDU apdu) {
+    /**
+     * Signs a hash.
+     * 
+     * @param apdu the incoming APDU object
+     * @throws ISOException when the incoming data is of incorrect length
+     */
+    public void signHash(APDU apdu) throws ISOException {
         // get buffer and check if incoming data is 32 bytes long
         byte[] buffer = apdu.getBuffer();
         short lc = (short) buffer[ISO7816.OFFSET_LC];
@@ -168,14 +186,45 @@ class ECDSA {
             ISOException.throwIt((short) 0x6720);
         short le = apdu.setOutgoing();
 
-        // sign
-        le = sign.signPreComputedHash(buffer, ISO7816.OFFSET_CDATA, lc, buffer, (short) 0);
+        // try to sign
+        try {
+            le = sign.signPreComputedHash(buffer, ISO7816.OFFSET_CDATA, lc, buffer, (short) 0);
+        } catch (CryptoException e) {
+            CryptoException.throwIt(e.getReason());
+        }
 
         // return response
         apdu.setOutgoingLength(le);
         apdu.sendBytes((short) 0, le);
     }
 
+    public void verifySignature(APDU apdu) {
+        // get length and offsets of data
+        byte[] buffer = apdu.getBuffer();
+        byte inOffset = ISO7816.OFFSET_CDATA;
+        byte inLength = buffer[ISO7816.OFFSET_P1];
+        byte sigOffset = (byte) (inOffset + inLength);
+        byte sigLength = buffer[ISO7816.OFFSET_P2];
+
+        // try to verify
+        try {
+            boolean isValid = verify.verify(buffer, inOffset, inLength, buffer, sigOffset, sigLength);
+            buffer[0] = isValid ? (byte) 1 : (byte) 0;
+        } catch (CryptoException e) {
+            CryptoException.throwIt(e.getReason());
+        }
+
+        // send response with length
+        apdu.setOutgoing();
+        apdu.setOutgoingLength((short) 1);
+        apdu.sendBytes((short) 0, (short) 1);
+    }
+
+    /**
+     * Generates a new keypair.
+     * 
+     * @param apdu the incoming APDU object
+     */
     public void genKey(APDU apdu) {
         // gen new keypair
         keyPair.genKeyPair();

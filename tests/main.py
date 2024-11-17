@@ -1,5 +1,8 @@
+from random import randint
 from smartcard.System import readers
 from utils import list2bytes, str2list, list2str, int2str, list2int, bytes2list
+
+from hashlib import sha256
 
 from ecdsa.curves import NIST256p
 from ecdsa.ecdsa import Public_key, Private_key
@@ -96,3 +99,14 @@ if __name__ == "__main__":
         print("Signature is properly calculated!")
     else:
         print("Signature is not properly calculated!")
+
+    # verify signature
+    message = [randint(0, 0xff) for i in range(32)]
+    sha = sha256()
+    sha.update(list2bytes(message))
+    mhash = bytes2list(sha.digest())
+    sign = priv.sign(list2int(mhash), k)
+    signature = encode_asn1(sign.r, sign.s)
+
+    data, sw1, sw2 = transmit(conn, 0xEB, [len(message), len(signature)], message + signature)
+    print(f"\nSimulating a correct signature...\nSignature is classified as{'' if data[0] else ' not'} valid!")
