@@ -1,3 +1,7 @@
+# import asn1 encoder and decoder
+from asn1 import Decoder, Encoder
+
+
 def list2str(lst: list) -> str:
     """Function to convert list to string.
 
@@ -143,3 +147,56 @@ def int2list(integer: int, len: int = 16) -> list:
         list: Output list.
     """
     return [(integer >> (i*8)) & 0xff for i in range(len)[::-1]]
+
+
+def decode_asn1(data: list) -> tuple[int, int]:
+    """Function to decode ASN.1 encoded signature data.
+
+    Args:
+        data (list): Raw ASN.1 encoded signature list.
+
+    Returns:
+        tuple[int, int]: Output tuple containing Signature integers (r,s).
+    """
+    # init decoder twice
+    decoder: Decoder = Decoder()
+
+    # decode first time
+    decoder.start(list2bytes(data))
+
+    # second decoding
+    decoder.start(decoder.read()[1])
+    r: int = 0
+    s: int = 0
+    _, r = decoder.read()
+    _, s = decoder.read()
+
+    # return
+    return r, s
+
+
+def encode_asn1(r: int, s: int) -> list:
+    """Function to encode (r,s) signature integer pair to a ASN.1 list.
+
+    Args:
+        r (int): R part of the signature.
+        s (int): S part of the signature.
+
+    Returns:
+        list: Output ASN.1 encoded signature list.
+    """
+    # init encoder
+    encoder: Encoder = Encoder()
+
+    # first encoding
+    encoder.start()
+    encoder.write(r)
+    encoder.write(s)
+    temp: bytes = encoder.output()
+
+    # second encoding
+    encoder.start()
+    encoder.write(temp, nr=16, typ=32, cls=0)
+
+    # return output
+    return bytes2list(encoder.output())

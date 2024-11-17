@@ -8,13 +8,24 @@ import javacard.framework.ISOException;
 
 class CryptoApplet extends Applet {
 
+    // instructions
+    private final byte INS_HELLO_WORLD = (byte) 0x40;
+    private final byte INS_ECDSA_SIGN = (byte) 0xEA;
+    private final byte INS_ECDSA_VERIFY = (byte) 0xEB;
+    private final byte INS_ECDSA_CONFIG = (byte) 0xEC;
+    private final byte INS_ECDSA_GENKEY = (byte) 0xED;
+
+    // constants
+    private final short SHORT0 = 0;
+
     // ECDSA object
     private ECDSA ecdsa = null;
 
     // Hello world string
-    private final static byte[] hello = {
+    private final byte[] HELLOSTR = {
             0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21
     };
+    private final short HELLOLEN = 12;
 
     /**
      * Constructor of the applet which initializes the crypto objects.
@@ -53,35 +64,36 @@ class CryptoApplet extends Applet {
         byte[] buf = apdu.getBuffer();
         switch (buf[ISO7816.OFFSET_INS]) {
             // simple hello world command
-            case (byte) 0x40:
+            case INS_HELLO_WORLD:
                 apdu.setOutgoing();
-                apdu.setOutgoingLength((short) 12);
-                apdu.sendBytesLong(hello, (short) 0, (short) 12);
-                break;
-
-            // get ecdsa parameters command
-            case (byte) 0xEC:
-                ecdsa.getConfig(apdu);
+                apdu.setOutgoingLength(HELLOLEN);
+                apdu.sendBytesLong(HELLOSTR, SHORT0, HELLOLEN);
                 break;
 
             // sign a 256bit hash
-            case (byte) 0xEA:
+            case INS_ECDSA_SIGN:
                 ecdsa.signHash(apdu);
                 break;
 
             // verify a signature
-            case (byte) 0xEB:
+            case INS_ECDSA_VERIFY:
                 ecdsa.verifySignature(apdu);
                 break;
 
+            // get ecdsa parameters command
+            case INS_ECDSA_CONFIG:
+                ecdsa.getConfig(apdu);
+                break;
+
             // generate a new keypair
-            case (byte) 0xED:
+            case INS_ECDSA_GENKEY:
                 ecdsa.genKey(apdu);
                 break;
 
             // other instructions are not supported
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+                break;
         }
     }
 }

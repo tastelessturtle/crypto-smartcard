@@ -15,6 +15,12 @@ import javacard.security.Signature;
 
 class ECDSA {
 
+    // constants
+    private final short SHORT0 = 0;
+    private final short SHORT1 = 1;
+    private final short HASHLEN = 32;
+    private final short HASHLEN_EXCEPTION = 0x6720;
+
     // instruction connstants
     private final byte PAR_PRIVATE = 0x00;
     private final byte PAR_PUBLIC = 0x01;
@@ -94,21 +100,21 @@ class ECDSA {
         // build private key
         privateKey = (ECPrivateKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PRIVATE, KeyBuilder.LENGTH_EC_FP_256,
                 false);
-        privateKey.setS(defaultPrivateKey, (short) 0, (short) defaultPrivateKey.length); // default private key
-        privateKey.setFieldFP(P256_FIELD, (short) 0, (short) P256_FIELD.length); // prime p
-        privateKey.setA(P256_A, (short) 0, (short) P256_A.length); // first coefficient
-        privateKey.setB(P256_B, (short) 0, (short) P256_B.length); // second coefficient
-        privateKey.setG(P256_G, (short) 0, (short) P256_G.length); // base point G
-        privateKey.setR(P256_R, (short) 0, (short) P256_R.length); // order of base point
+        privateKey.setS(defaultPrivateKey, SHORT0, (short) defaultPrivateKey.length); // default private key
+        privateKey.setFieldFP(P256_FIELD, SHORT0, (short) P256_FIELD.length); // prime p
+        privateKey.setA(P256_A, SHORT0, (short) P256_A.length); // first coefficient
+        privateKey.setB(P256_B, SHORT0, (short) P256_B.length); // second coefficient
+        privateKey.setG(P256_G, SHORT0, (short) P256_G.length); // base point G
+        privateKey.setR(P256_R, SHORT0, (short) P256_R.length); // order of base point
 
         // build public key
         publicKey = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, KeyBuilder.LENGTH_EC_FP_256, false);
-        publicKey.setW(defaultPublicKey, (short) 0, (short) defaultPublicKey.length); // default public key
-        publicKey.setFieldFP(P256_FIELD, (short) 0, (short) P256_FIELD.length); // prime p
-        publicKey.setA(P256_A, (short) 0, (short) P256_A.length); // first coefficient
-        publicKey.setB(P256_B, (short) 0, (short) P256_B.length); // second coefficient
-        publicKey.setG(P256_G, (short) 0, (short) P256_G.length); // base point G
-        publicKey.setR(P256_R, (short) 0, (short) P256_R.length); // order of base point
+        publicKey.setW(defaultPublicKey, SHORT0, (short) defaultPublicKey.length); // default public key
+        publicKey.setFieldFP(P256_FIELD, SHORT0, (short) P256_FIELD.length); // prime p
+        publicKey.setA(P256_A, SHORT0, (short) P256_A.length); // first coefficient
+        publicKey.setB(P256_B, SHORT0, (short) P256_B.length); // second coefficient
+        publicKey.setG(P256_G, SHORT0, (short) P256_G.length); // base point G
+        publicKey.setR(P256_R, SHORT0, (short) P256_R.length); // order of base point
 
         // make keyPair
         keyPair = new KeyPair(publicKey, privateKey);
@@ -137,25 +143,25 @@ class ECDSA {
         byte P1 = buffer[ISO7816.OFFSET_P1];
         switch (P1) {
             case PAR_PRIVATE:
-                le = privateKey.getS(buffer, (short) 0);
+                le = privateKey.getS(buffer, SHORT0);
                 break;
             case PAR_PUBLIC:
-                le = publicKey.getW(buffer, (short) 0);
+                le = publicKey.getW(buffer, SHORT0);
                 break;
             case PAR_FIELD:
-                le = publicKey.getField(buffer, (short) 0);
+                le = publicKey.getField(buffer, SHORT0);
                 break;
             case PAR_A:
-                le = publicKey.getA(buffer, (short) 0);
+                le = publicKey.getA(buffer, SHORT0);
                 break;
             case PAR_B:
-                le = publicKey.getB(buffer, (short) 0);
+                le = publicKey.getB(buffer, SHORT0);
                 break;
             case PAR_G:
-                le = publicKey.getG(buffer, (short) 0);
+                le = publicKey.getG(buffer, SHORT0);
                 break;
             case PAR_R:
-                le = publicKey.getR(buffer, (short) 0);
+                le = publicKey.getR(buffer, SHORT0);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
@@ -165,10 +171,10 @@ class ECDSA {
         // return response and remove uncompressed tag for 256 bit data
         if (P1 == PAR_PUBLIC || P1 == PAR_G) {
             apdu.setOutgoingLength((short) (le - 1));
-            apdu.sendBytes((short) 1, (short) (le - 1));
+            apdu.sendBytes(SHORT1, (short) (le - 1));
         } else {
             apdu.setOutgoingLength(le);
-            apdu.sendBytes((short) 0, le);
+            apdu.sendBytes(SHORT0, le);
         }
     }
 
@@ -176,29 +182,36 @@ class ECDSA {
      * Signs a hash.
      * 
      * @param apdu the incoming APDU object
-     * @throws ISOException when the incoming data is of incorrect length
+     * @throws ISOException    when the incoming data is of incorrect length
+     * @throws CryptoException when the sign function crashes
      */
-    public void signHash(APDU apdu) throws ISOException {
+    public void signHash(APDU apdu) throws ISOException, CryptoException {
         // get buffer and check if incoming data is 32 bytes long
         byte[] buffer = apdu.getBuffer();
         short lc = (short) buffer[ISO7816.OFFSET_LC];
-        if (lc != 32)
-            ISOException.throwIt((short) 0x6720);
+        if (lc != HASHLEN)
+            ISOException.throwIt(HASHLEN_EXCEPTION);
         short le = apdu.setOutgoing();
 
         // try to sign
         try {
-            le = sign.signPreComputedHash(buffer, ISO7816.OFFSET_CDATA, lc, buffer, (short) 0);
+            le = sign.signPreComputedHash(buffer, ISO7816.OFFSET_CDATA, lc, buffer, SHORT0);
         } catch (CryptoException e) {
             CryptoException.throwIt(e.getReason());
         }
 
         // return response
         apdu.setOutgoingLength(le);
-        apdu.sendBytes((short) 0, le);
+        apdu.sendBytes(SHORT0, le);
     }
 
-    public void verifySignature(APDU apdu) {
+    /**
+     * Verifies a message and its signature.
+     * 
+     * @param apdu the incoming APDU object
+     * @throws CryptoException when the verify function crashes
+     */
+    public void verifySignature(APDU apdu) throws CryptoException {
         // get length and offsets of data
         byte[] buffer = apdu.getBuffer();
         byte inOffset = ISO7816.OFFSET_CDATA;
@@ -216,8 +229,8 @@ class ECDSA {
 
         // send response with length
         apdu.setOutgoing();
-        apdu.setOutgoingLength((short) 1);
-        apdu.sendBytes((short) 0, (short) 1);
+        apdu.setOutgoingLength(SHORT1);
+        apdu.sendBytes(SHORT0, SHORT1);
     }
 
     /**
@@ -232,7 +245,7 @@ class ECDSA {
         publicKey = (ECPublicKey) keyPair.getPublic();
 
         // return with okay
-        apdu.setOutgoingLength((short) 0);
-        apdu.sendBytes((short) 0, (short) (0));
+        apdu.setOutgoingLength(SHORT0);
+        apdu.sendBytes(SHORT0, SHORT0);
     }
 }
