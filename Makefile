@@ -3,10 +3,10 @@ CryptoApplet.cap: build.xml src/cryptoapplet/CryptoApplet.java src/cryptoapplet/
 	rm -f CryptoApplet
 	ant
 	java -jar tools/gp.jar --install CryptoApplet.cap
-	python3 tests/main.py
+	pytest -s
 
 test:
-	python3 tests/main.py
+	pytest -s
 
 clean:
 	-java -jar tools/gp.jar --uninstall CryptoApplet.cap

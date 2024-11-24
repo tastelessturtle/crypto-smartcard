@@ -179,6 +179,30 @@ class ECDSA {
     }
 
     /**
+     * Signs a message by first calculating the hash.
+     * 
+     * @param apdu the incoming APDU object
+     * @throws CryptoException when the sign function crashes
+     */
+    public void sign(APDU apdu) throws CryptoException {
+        // get incoming data
+        byte[] buffer = apdu.getBuffer();
+        short lc = (short) buffer[ISO7816.OFFSET_LC];
+        short le = apdu.setOutgoing();
+
+        // try to hash and sign
+        try {
+            le = sign.sign(buffer, ISO7816.OFFSET_CDATA, lc, buffer, SHORT0);
+        } catch (CryptoException e) {
+            CryptoException.throwIt(e.getReason());
+        }
+
+        // return response
+        apdu.setOutgoingLength(le);
+        apdu.sendBytes(SHORT0, le);
+    }
+
+    /**
      * Signs a hash.
      * 
      * @param apdu the incoming APDU object
@@ -245,6 +269,7 @@ class ECDSA {
         publicKey = (ECPublicKey) keyPair.getPublic();
 
         // return with okay
+        apdu.setOutgoing();
         apdu.setOutgoingLength(SHORT0);
         apdu.sendBytes(SHORT0, SHORT0);
     }

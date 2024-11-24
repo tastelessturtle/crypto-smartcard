@@ -16,7 +16,7 @@ This applet makes it easier to leverage the secure cryptographic implementations
 
 The following packages are required to run the project
   
-- Python 3.10.0 or higher, with python packages `swig`, `pyscard`, `ecdsa` and `asn1`
+- Python 3.10.0 or higher, with python packages `swig`, `pyscard`, `ecdsa`, `asn1` and `pytest`
 - Java SDK version 11
 - make
 - smartcard reader drivers
@@ -29,7 +29,7 @@ sudo apt update
 sudo apt upgrade
 sudo apt install make libpcsclite-dev pcscd openjdk-11-jdk ant
 
-pip install swig pyscard ecdsa asn1
+pip install swig pyscard ecdsa asn1 pytest
 ```
 
 In addition to these packages, the following external tools are required:
@@ -42,8 +42,8 @@ The JavaCard Ant and GPPro jar have been included in the `tools` folder, but I r
 
 ## Using the repository
 The repository is created and tested through the `Makefile`. Make has three commands:
-- `make`: Removes the applet from the smartcard if it was present, builds the new applet, uploads the applet onto the smartcard and runs the `test/main.py` test to verify the applet on the smartcard.
-- `make test`: Only runs the `test/main.py` to run the test code quicker.
+- `make`: Removes the applet from the smartcard if it was present, builds the new applet, uploads the applet onto the smartcard and runs `pytest`.
+- `make test`: Only runs `pytest`.
 - `make clean`: Removes the applet from the smartcard if present and removes the temporary files in the repository
 
 
@@ -101,6 +101,14 @@ To generate a new keypair use:
 |CLA|INS|P1|P2|LC|DATA|LE|
 |---|---|---|---|---|---|---|
 |`0x00`|`0xED`|`0xNA`|`0xNA`|`0x00`|empty|Not checked|
+
+### ECDSA Sign Message (INS=0xEE)
+
+|CLA|INS|P1|P2|LC|DATA|LE|
+|---|---|---|---|---|---|---|
+|`0x00`|`0xEE`|`0xNA`|`0xNA`|len(`message`)|the message with given length|Not checked|\
+
+The maximum message length is 128 bytes, but we advice the message to be at max `128-74=54` bytes. If the message is longer than 54 bytes, the used will not be able to verify the signature with the smartcard since the data for verification will exceed the maximum size of 128 bytes.
 
 
 ## License

@@ -14,6 +14,7 @@ class CryptoApplet extends Applet {
     private final byte INS_ECDSA_VERIFY = (byte) 0xEB;
     private final byte INS_ECDSA_CONFIG = (byte) 0xEC;
     private final byte INS_ECDSA_GENKEY = (byte) 0xED;
+    private final byte INS_ECDSA_SIGN_MESSAGE = (byte) 0xEE;
 
     // constants
     private final short SHORT0 = 0;
@@ -88,6 +89,11 @@ class CryptoApplet extends Applet {
             // generate a new keypair
             case INS_ECDSA_GENKEY:
                 ecdsa.genKey(apdu);
+                break;
+
+            // sign normal message
+            case INS_ECDSA_SIGN_MESSAGE:
+                ecdsa.sign(apdu);
                 break;
 
             // other instructions are not supported
